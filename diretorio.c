@@ -28,6 +28,24 @@ void inicializar_diretorio_raiz(const char *nome_disco)
 
     Disco sb;
     fread(&sb, sizeof(Disco), 1, f);
+    
+    sb.blocos_livres--;
+    sb.inodes_livres--;
+    
+    // Grava o Superbloco atualizado de volta no início
+    fseek(f, 0, SEEK_SET);
+    fwrite(&sb, sizeof(Disco), 1, f);
+
+    // Carrega o bitmap, marca a posição 0 como ocupada (1) e grava de volta
+    int *bitmap = (int*) malloc(sb.qtd_blocos * sizeof(int));
+    fseek(f, sizeof(Disco), SEEK_SET);
+    fread(bitmap, sizeof(int), sb.qtd_blocos, f);
+    
+    bitmap[0] = 1; // Bloco 0 agora está oficialmente ocupado
+    
+    fseek(f, sizeof(Disco), SEEK_SET);
+    fwrite(bitmap, sizeof(int), sb.qtd_blocos, f);
+    free(bitmap);
 
     // Quantidade de entradas (Tamanho do bloco / Tamanho de uma entrada)
     int qtd_entradas = sb.tamanho_bloco / sizeof(EntradaDiretorio);

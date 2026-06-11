@@ -15,6 +15,18 @@ int main(){
 
     formatar_disco("meu_hd_virtual.bin", tamanho_disco, tamanho_bloco, max_inodes);
     inicializar_diretorio_raiz("meu_hd_virtual.bin");
-   
+    printf("\n--- Testando Alocação ---\n");
+    int b1 = alocar_bloco("meu_hd_virtual.bin");
+    int b2 = alocar_bloco("meu_hd_virtual.bin");
+    int i1 = alocar_inode("meu_hd_virtual.bin");
+
+    printf("Bloco 1 alocado: %d (Esperado: 1, pois a raiz usa o 0)\n", b1);
+    printf("Bloco 2 alocado: %d (Esperado: 2)\n", b2);
+    printf("i-node alocado: %d (Esperado: 1, pois a raiz usa o 0)\n", i1);
+
+    // Liberando para ver se volta a funcionar
+    liberar_bloco("meu_hd_virtual.bin", b1);
+    int b3 = alocar_bloco("meu_hd_virtual.bin");
+    printf("Bloco alocado após liberação: %d (Esperado: 1, pois foi reciclado)\n", b3);
     return 0;
 }
