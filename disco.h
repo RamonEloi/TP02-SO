@@ -1,3 +1,6 @@
+#ifndef DISCO_H
+#define DISCO_H
+
 #include "common.h"
 
 typedef struct {
@@ -14,3 +17,5 @@ int alocar_bloco(const char* nome_disco);
 void liberar_bloco(const char* nome_disco, int bloco_id);
 int alocar_inode(const char* nome_disco);
 void liberar_inode(const char* nome_disco, int id_inode);
+
+#endif
