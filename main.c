@@ -1,12 +1,9 @@
-#include <stdio.h>
-#include <string.h>
-
 #include "common.h"
 #include "disco.h"
 #include "diretorio.h"
 #include "navegacao.h"
+#include "arquivo.h"
 
- //GALO DOIDO
 
 int main(){
     // Parâmetros para o teste:
@@ -58,6 +55,12 @@ int main(){
             simular_mkdir("meu_hd_virtual.bin", nome_pasta, diretorio_atual_id);
             printf("Sucesso: Pasta '%s' criada!\n", nome_pasta);
         } 
+        
+        else if (strncmp(comando, "touch ", 6) == 0){
+            char *nome_arquivo = comando + 6;
+            criar_arquivo("meu_hd_virtual.bin", nome_arquivo, diretorio_atual_id);
+            printf("Arquivo '%s' criado!\n", nome_arquivo);
+        }
         // Se o comando for "ls"
         else if (strcmp(comando, "ls") == 0) {
             listar_diretorio("meu_hd_virtual.bin", diretorio_atual_id);

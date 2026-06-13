@@ -1,3 +1,6 @@
+#ifndef I_NODE_H
+#define I_NODE_H
+
 #include "common.h"
 
 typedef struct inode {
@@ -20,3 +23,5 @@ typedef struct inode {
 
 void guardar_inode(const char* nome_disco, int id_inode, inode* in);
 void ler_inode(const char* nome_disco, int id_inode, inode* in);
+
+#endif
