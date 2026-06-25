@@ -1,6 +1,12 @@
 #include "arquivo.h"
+#include "navegacao.h"
 
 int criar_arquivo(const char *nome_disco, const char *nome_arquivo, int id_pai){
+    if(buscar_filho_por_nome(nome_disco, id_pai, nome_arquivo) != -1) {
+        printf("Erro: Arquivo '%s' ja existe no diretorio pai.\n", nome_arquivo);
+        return -1;
+    }
+
     int novo_id = alocar_inode(nome_disco);
 
     if(novo_id == -1)

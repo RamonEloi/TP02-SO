@@ -4,51 +4,91 @@
 
 #include "navegacao.h"
 
-int encontrar_inode_por_caminho(const char* nome_disco, const char* caminho, int id_diretorio_atual) {
-    if (strcmp(caminho, "/") == 0) return 0; // Assume que o i-node 0 é a raiz
+int encontrar_inode_por_caminho(const char *nome_disco, const char *caminho, int id_diretorio_atual)
+{
+    if (strcmp(caminho, "/") == 0)
+        return 0; // Assume que o i-node 0 é a raiz
 
     char caminho_copia[256];
     strncpy(caminho_copia, caminho, sizeof(caminho_copia));
-    
+
     int id_atual = id_diretorio_atual;
-    if (caminho[0] == '/') {
+    if (caminho[0] == '/')
+    {
         id_atual = 0; // Caminho absoluto começa na raiz
     }
 
-    char* token = strtok(caminho_copia, "/");
+    char *token = strtok(caminho_copia, "/");
     inode in_atual;
 
-    while (token != NULL) {
+    while (token != NULL)
+    {
         ler_inode(nome_disco, id_atual, &in_atual);
-        
-        if (!in_atual.is_diretorio) return -1; // O caminho tenta entrar num ficheiro que não é diretoria
+
+        if (!in_atual.is_diretorio)
+            return -1; // O caminho tenta entrar num ficheiro que não é diretoria
 
         int id_filho = in_atual.id_primeiroFilho;
         int encontrou = 0;
         inode in_filho;
 
         // Itera sobre todos os filhos (irmãos do primeiro filho)
-        while (id_filho != -1) {
+        while (id_filho != -1)
+        {
             ler_inode(nome_disco, id_filho, &in_filho);
-            if (strcmp(in_filho.nome, token) == 0) {
-                id_atual = id_filho; 
+            if (strcmp(in_filho.nome, token) == 0)
+            {
+                id_atual = id_filho;
                 encontrou = 1;
                 break;
             }
-            id_filho = in_filho.id_proximoIrmao; 
+            id_filho = in_filho.id_proximoIrmao;
         }
 
-        if (!encontrou) return -1;
+        if (!encontrou)
+            return -1;
         token = strtok(NULL, "/");
     }
 
     return id_atual;
 }
+int buscar_filho_por_nome(const char *nome_disco, int id_pai, const char *nome)
+{
+    inode pai;
+    ler_inode(nome_disco, id_pai, &pai);
 
+    if (!pai.is_diretorio)
+    {
+        return -1;
+    }
+
+    int id_filho = pai.id_primeiroFilho;
+
+    while (id_filho != -1)
+    {
+        inode filho;
+        ler_inode(nome_disco, id_filho, &filho);
+
+        if (strcmp(filho.nome, nome) == 0)
+        {
+            return id_filho;
+        }
+        id_filho = filho.id_proximoIrmao;
+    }
+    return -1; // Retorna -1 se o filho não for encontrado
+}
 // Cria uma nova diretoria dentro de um diretório pai
-int simular_mkdir(const char* nome_disco, const char* nome_novo_dir, int id_pai) {
+int simular_mkdir(const char *nome_disco, const char *nome_novo_dir, int id_pai)
+{
+    if (buscar_filho_por_nome(nome_disco, id_pai, nome_novo_dir) != -1)
+    {
+        printf("Erro: Diretorio '%s' ja existe no diretorio pai.\n", nome_novo_dir);
+        return -1;
+    }
+
     int novo_id = alocar_inode(nome_disco);
-    if (novo_id == -1) {
+    if (novo_id == -1)
+    {
         printf("Erro: Sem i-nodes livres.\n");
         return -1;
     }
@@ -59,8 +99,9 @@ int simular_mkdir(const char* nome_disco, const char* nome_novo_dir, int id_pai)
     novo_dir.nome[sizeof(novo_dir.nome) - 1] = '\0';
     novo_dir.tamanho = 0;
     novo_dir.is_diretorio = 1;
-    for(int i = 0; i < 12; i++) novo_dir.blocos[i] = -1;
-    
+    for (int i = 0; i < 12; i++)
+        novo_dir.blocos[i] = -1;
+
     time_t agora = time(NULL);
     novo_dir.criado = agora;
     novo_dir.modificado = agora;
@@ -73,14 +114,19 @@ int simular_mkdir(const char* nome_disco, const char* nome_novo_dir, int id_pai)
     inode pai;
     ler_inode(nome_disco, id_pai, &pai);
 
-    if (pai.id_primeiroFilho == -1) {
+    if (pai.id_primeiroFilho == -1)
+    {
         pai.id_primeiroFilho = novo_id;
-    } else {
+    }
+    else
+    {
         int id_irmao = pai.id_primeiroFilho;
         inode irmao;
-        while (1) {
+        while (1)
+        {
             ler_inode(nome_disco, id_irmao, &irmao);
-            if (irmao.id_proximoIrmao == -1) {
+            if (irmao.id_proximoIrmao == -1)
+            {
                 irmao.id_proximoIrmao = novo_id;
                 guardar_inode(nome_disco, irmao.id, &irmao); // Atualiza o irmão no disco
                 break;
@@ -90,25 +136,28 @@ int simular_mkdir(const char* nome_disco, const char* nome_novo_dir, int id_pai)
     }
 
     pai.modificado = agora;
-    
+
     guardar_inode(nome_disco, id_pai, &pai);
     guardar_inode(nome_disco, novo_id, &novo_dir);
 
     return novo_id;
 }
-void listar_diretorio(const char* nome_disco, int id_diretorio) {
+void listar_diretorio(const char *nome_disco, int id_diretorio)
+{
     inode dir_atual;
     ler_inode(nome_disco, id_diretorio, &dir_atual);
 
     // Proteção de segurança
-    if (!dir_atual.is_diretorio) {
+    if (!dir_atual.is_diretorio)
+    {
         printf("Erro: O i-node %d nao e um diretorio.\n", id_diretorio);
         return;
     }
 
     int id_filho = dir_atual.id_primeiroFilho;
 
-    if (id_filho == -1) {
+    if (id_filho == -1)
+    {
         printf("Diretorio vazio.\n");
         return;
     }
@@ -116,14 +165,14 @@ void listar_diretorio(const char* nome_disco, int id_diretorio) {
     printf("TIPO\tID\tTAMANHO\tNOME\n");
     printf("----------------------------------------\n");
 
-
-    while (id_filho != -1) {
+    while (id_filho != -1)
+    {
         inode filho;
         ler_inode(nome_disco, id_filho, &filho);
 
         // Define se é Diretório (D) ou Arquivo (A)
         char tipo = filho.is_diretorio ? 'D' : 'A';
-        
+
         printf("[%c]\t%d\t%d B\t%s\n", tipo, filho.id, filho.tamanho, filho.nome);
         id_filho = filho.id_proximoIrmao;
     }

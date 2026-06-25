@@ -52,14 +52,21 @@ int main(){
         // Se o comando começar com "mkdir "
         if (strncmp(comando, "mkdir ", 6) == 0) {
             char *nome_pasta = comando + 6; // Pega só a palavra depois do espaço
-            simular_mkdir("meu_hd_virtual.bin", nome_pasta, diretorio_atual_id);
-            printf("Sucesso: Pasta '%s' criada!\n", nome_pasta);
+            
+            int resultado = simular_mkdir("meu_hd_virtual.bin", nome_pasta, diretorio_atual_id);
+
+            if (resultado != -1) {
+                printf("Diretorio '%s' criado com sucesso!\n", nome_pasta);
+            }
         } 
         
         else if (strncmp(comando, "touch ", 6) == 0){
             char *nome_arquivo = comando + 6;
-            criar_arquivo("meu_hd_virtual.bin", nome_arquivo, diretorio_atual_id);
-            printf("Arquivo '%s' criado!\n", nome_arquivo);
+            int resultado = criar_arquivo("meu_hd_virtual.bin", nome_arquivo, diretorio_atual_id);
+            
+            if (resultado != -1) {
+                printf("Arquivo '%s' criado com sucesso!\n", nome_arquivo);
+            }
         }
         // Se o comando for "ls"
         else if (strcmp(comando, "ls") == 0) {
