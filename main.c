@@ -12,8 +12,10 @@ int main(){
     formatar_disco("meu_hd_virtual.bin", tamanho_disco, tamanho_bloco, max_inodes);
     inicializar_diretorio_raiz("meu_hd_virtual.bin");
 
-    printf("\n--- Simulador de Sistema de Arquivos (Modo Simples) ---\n");
-    printf("Comandos disponiveis: mkdir <nome>, touch <nome>, importar <arquivo_real> <nome_virtual>, cat <nome>, ls, sair\n\n");
+        printf("\n--- Simulador de Sistema de Arquivos (Modo Simples) ---\n");
+        printf("Comandos disponiveis: mkdir <nome>, touch <nome>, importar <arquivo_real> <nome_virtual>,\n"
+            "cat <nome>, rm <nome>, rmdir <nome>,renomear <nome_antigo> <nome_novo>,\n" 
+            "mv <nome_item> <nome_destino>, ls, sair\n\n");
 
     char comando[256];
     int diretorio_atual_id = 0; 
@@ -67,6 +69,42 @@ int main(){
                 exibir_conteudo_arquivo("meu_hd_virtual.bin", id_alvo);
             } else {
                 printf("Arquivo nao encontrado.\n");
+            }
+        }
+        else if (strncmp(comando, "rm ", 3) == 0) {
+            char *nome_arq = comando + 3;
+            int resultado = remover_arquivo("meu_hd_virtual.bin", nome_arq, diretorio_atual_id);
+            if (resultado != -1) {
+                printf("Arquivo apagado com sucesso!\n");
+            }
+        }
+        else if (strncmp(comando, "rmdir ", 6) == 0) {
+            char *nome_pasta = comando + 6;
+            int resultado = remover_diretorio("meu_hd_virtual.bin", nome_pasta, diretorio_atual_id);
+            if (resultado != -1) {
+                printf("Diretorio apagado com sucesso!\n");
+            }
+        }
+        else if (strncmp(comando, "renomear ", 9) == 0) {
+            char nome_antigo[100], nome_novo[100];
+            if (sscanf(comando + 9, "%s %s", nome_antigo, nome_novo) == 2) {
+                int resultado = renomear_item("meu_hd_virtual.bin", nome_antigo, nome_novo, diretorio_atual_id);
+                if (resultado != -1) {
+                    printf("Item renomeado com sucesso!\n");
+                }
+            } else {
+                printf("Uso correto: renomear <nome_antigo> <nome_novo>\n");   
+            }
+        }
+        else if (strncmp(comando, "mv ", 3) == 0) {
+            char nome_item[100], nome_destino[100];
+            if (sscanf(comando + 3, "%s %s", nome_item, nome_destino) == 2) {
+                int resultado = mover_item("meu_hd_virtual.bin", nome_item, nome_destino, diretorio_atual_id);
+                if (resultado != -1) {
+                    printf("Item movido com sucesso!\n");
+                }
+            } else {
+                printf("Uso correto: mv <nome_arquivo> <nome_pasta_destino>\n");   
             }
         }
         else if (strlen(comando) > 0) {

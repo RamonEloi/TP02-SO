@@ -198,3 +198,193 @@ void exibir_conteudo_arquivo(const char *nome_disco, int id_inode){
     free(buffer);
     fclose(f);
 }
+
+int remover_arquivo(const char *nome_disco, const char *nome_arquivo, int id_pai){
+    int id_filho = buscar_filho_por_nome(nome_disco, id_pai, nome_arquivo);
+    if (id_filho == -1) {
+        printf("Erro: Arquivo '%s' nao encontrado.\n", nome_arquivo);
+        return -1;
+    }
+    inode in;
+    ler_inode(nome_disco, id_filho, &in);
+    if (in.is_diretorio == 1) {
+        printf("Erro: '%s' e um diretorio, nao um arquivo.\n", nome_arquivo);
+        return -1;
+    }
+    for (int i = 0; i < 12; i++) {
+        if (in.blocos[i] != -1) {
+            liberar_bloco(nome_disco, in.blocos[i]);
+        }
+    }
+    inode pai;
+    ler_inode(nome_disco, id_pai, &pai);
+    if(pai.id_primeiroFilho == id_filho){
+        pai.id_primeiroFilho = in.id_proximoIrmao;
+    } else {
+        int id_irmao = pai.id_primeiroFilho;
+        inode irmao;
+        while (id_irmao != -1) {
+            ler_inode(nome_disco, id_irmao, &irmao);
+            if (irmao.id_proximoIrmao == id_filho) {
+                irmao.id_proximoIrmao = in.id_proximoIrmao;
+                guardar_inode(nome_disco, irmao.id, &irmao);
+                break;
+            }
+            id_irmao = irmao.id_proximoIrmao;
+        }
+    }liberar_inode(nome_disco, id_filho);
+    return 0;
+}
+
+int remover_diretorio(const char *nome_disco, const char *nome_pasta, int id_pai) {
+    int id_alvo = buscar_filho_por_nome(nome_disco, id_pai, nome_pasta);
+
+    if (id_alvo == -1) {
+        printf("Erro: Diretorio '%s' nao encontrado.\n", nome_pasta);
+        return -1;
+    }
+
+    inode alvo;
+    ler_inode(nome_disco, id_alvo, &alvo);
+
+    if (alvo.is_diretorio == 0) {
+        printf("Erro: '%s' e um arquivo. Use o comando rm.\n", nome_pasta);
+        return -1;
+    }
+
+    if (alvo.id_primeiroFilho != -1) {
+        printf("Erro: O diretorio '%s' nao esta vazio.\n", nome_pasta);
+        return -1;
+    }
+
+    for (int i = 0; i < 12; i++) {
+        if (alvo.blocos[i] != -1) {
+            liberar_bloco(nome_disco, alvo.blocos[i]);
+        }
+    }
+
+    inode pai;
+    ler_inode(nome_disco, id_pai, &pai);
+
+    if (pai.id_primeiroFilho == id_alvo) {
+        pai.id_primeiroFilho = alvo.id_proximoIrmao;
+        pai.modificado = time(NULL);
+        guardar_inode(nome_disco, id_pai, &pai);
+    } else {
+        int id_atual = pai.id_primeiroFilho;
+        inode atual;
+
+        while (id_atual != -1) {
+            ler_inode(nome_disco, id_atual, &atual);
+
+            if (atual.id_proximoIrmao == id_alvo) {
+                atual.id_proximoIrmao = alvo.id_proximoIrmao;
+                guardar_inode(nome_disco, atual.id, &atual);
+                break;
+            }
+            id_atual = atual.id_proximoIrmao;
+        }
+    }
+
+    liberar_inode(nome_disco, id_alvo);
+
+    return 0;
+}
+
+int renomear_item(const char *nome_disco, const char *nome_antigo, const char *nome_novo, int id_pai){
+    int id_item = buscar_filho_por_nome(nome_disco, id_pai, nome_antigo);
+    if (id_item == -1) {
+        printf("Erro: Item '%s' nao encontrado.\n", nome_antigo);
+        return -1;
+    }
+    if (buscar_filho_por_nome(nome_disco, id_pai, nome_novo) != -1) {
+        printf("Erro: Ja existe um item com o nome '%s'.\n", nome_novo);
+        return -1;
+    }
+    inode item;
+    ler_inode(nome_disco, id_item, &item);
+    strncpy(item.nome, nome_novo, sizeof(item.nome) - 1);
+    item.nome[sizeof(item.nome) - 1] = '\0';
+    item.modificado = time(NULL);
+    guardar_inode(nome_disco, id_item, &item);
+    return 0;
+}
+
+int mover_item(const char *nome_disco, const char *nome_item, const char *nome_destino, int id_pai_atual) {
+    int id_item = buscar_filho_por_nome(nome_disco, id_pai_atual, nome_item);
+    
+    if (id_item == -1) {
+        printf("Erro: Item '%s' nao encontrado.\n", nome_item);
+        return -1;
+    }
+    
+    int id_novo_pai = buscar_filho_por_nome(nome_disco, id_pai_atual, nome_destino);
+    
+    if (id_novo_pai == -1) {
+        printf("Erro: Diretorio de destino '%s' nao encontrado.\n", nome_destino);
+        return -1;
+    }
+
+    inode novo_pai;
+    ler_inode(nome_disco, id_novo_pai, &novo_pai);
+
+    if (novo_pai.is_diretorio == 0) {
+        printf("Erro: Destino '%s' nao e um diretorio.\n", nome_destino);
+        return -1;
+    }
+    
+    if (buscar_filho_por_nome(nome_disco, id_novo_pai, nome_item) != -1) {
+        printf("Erro: Item '%s' ja existe no destino.\n", nome_item);
+        return -1;
+    }
+    
+    inode pai_atual;
+    ler_inode(nome_disco, id_pai_atual, &pai_atual);
+    inode item;
+    ler_inode(nome_disco, id_item, &item);
+
+    if (pai_atual.id_primeiroFilho == id_item) {
+        pai_atual.id_primeiroFilho = item.id_proximoIrmao;
+    } else {
+        int id_irmao = pai_atual.id_primeiroFilho;
+        inode irmao;
+        while (id_irmao != -1) {
+            ler_inode(nome_disco, id_irmao, &irmao);
+            if (irmao.id_proximoIrmao == id_item) {
+                irmao.id_proximoIrmao = item.id_proximoIrmao;
+                guardar_inode(nome_disco, irmao.id, &irmao);
+                break;
+            }
+            id_irmao = irmao.id_proximoIrmao;
+        }
+    }
+    
+    guardar_inode(nome_disco, id_pai_atual, &pai_atual);
+    
+    item.id_pai = id_novo_pai;
+    item.id_proximoIrmao = -1;
+
+    if (novo_pai.id_primeiroFilho == -1) {
+        novo_pai.id_primeiroFilho = id_item;
+    } else {
+        int id_irmao = novo_pai.id_primeiroFilho;
+        inode irmao;
+        while (1) {
+            ler_inode(nome_disco, id_irmao, &irmao);
+            if (irmao.id_proximoIrmao == -1) {
+                irmao.id_proximoIrmao = id_item;
+                guardar_inode(nome_disco, irmao.id, &irmao);
+                break;
+            }
+            id_irmao = irmao.id_proximoIrmao;
+        }
+    }
+    
+    novo_pai.modificado = time(NULL);
+    guardar_inode(nome_disco, id_novo_pai, &novo_pai);
+    
+    item.modificado = time(NULL);
+    guardar_inode(nome_disco, id_item, &item);
+
+    return 0;
+}
