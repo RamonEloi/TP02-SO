@@ -13,15 +13,18 @@ int main(){
     inicializar_diretorio_raiz("meu_hd_virtual.bin");
 
         printf("\n--- Simulador de Sistema de Arquivos (Modo Simples) ---\n");
-        printf("Comandos disponiveis: mkdir <nome>, touch <nome>, importar <arquivo_real> <nome_virtual>,\n"
+        printf("Comandos disponiveis: mkdir <nome>, touch <nome>, cd <diretorio>,pwd, importar <arquivo_real> <nome_virtual>,\n"
             "cat <nome>, rm <nome>, rmdir <nome>,renomear <nome_antigo> <nome_novo>,\n" 
             "mv <nome_item> <nome_destino>, ls, sair\n\n");
 
     char comando[256];
     int diretorio_atual_id = 0; 
+    char caminho_atual[256];
 
     while(1) {
-        printf("meu-disco> "); 
+        obter_caminho_atual("meu_hd_virtual.bin",diretorio_atual_id, caminho_atual);
+
+        printf("meu-disco:%s> ", caminho_atual); 
         
         if (fgets(comando, sizeof(comando), stdin) == NULL) break;
 
@@ -43,6 +46,15 @@ int main(){
             if (resultado != -1) {
                 printf("Arquivo '%s' criado com sucesso!\n", nome_arquivo);
             }
+        }
+        else if(strncmp(comando,"cd ",3)==0){
+            char *destino = comando + 3;
+
+            mudar_diretorio("meu_hd_virtual.bin",destino, &diretorio_atual_id);
+        }
+        else if(strcmp(comando,"pwd")==0){ 
+            obter_caminho_atual("meu_hd_virtual.bin", diretorio_atual_id, caminho_atual);
+            printf("%s\n", caminho_atual);
         }
         else if (strcmp(comando, "ls") == 0) {
             listar_diretorio("meu_hd_virtual.bin", diretorio_atual_id);

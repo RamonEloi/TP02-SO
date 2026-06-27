@@ -177,3 +177,71 @@ void listar_diretorio(const char *nome_disco, int id_diretorio)
         id_filho = filho.id_proximoIrmao;
     }
 }
+
+int mudar_diretorio(const char *nome_disco, const char *caminho, int *id_atual){
+    int destino;
+
+    if(strcmp(caminho, "..") == 0){
+        inode atual;
+        ler_inode(nome_disco, *id_atual, &atual);
+
+        *id_atual = atual.id_pai;
+        return 0;
+    }
+
+    destino = encontrar_inode_por_caminho(
+                    nome_disco,
+                    caminho,
+                    *id_atual);
+
+    if(destino == -1){
+        printf("Diretorio nao encontrado.\n");
+        return -1;
+    }
+
+    inode dir;
+    ler_inode(nome_disco, destino, &dir);
+
+    if(!dir.is_diretorio)
+    {
+        printf("'%s' nao e um diretorio.\n", caminho);
+        return -1;
+    }
+
+    *id_atual = destino;
+
+    return 0;
+}
+
+void obter_caminho_atual(const char *nome_disco,int id_atual, char *saida){
+    if(id_atual == 0){
+        strcpy(saida, "/");
+        return;
+    }
+
+    char nomes[100][50];
+    int qtd = 0;
+
+    while(id_atual != 0)
+    {
+        inode atual;
+        ler_inode(nome_disco, id_atual, &atual);
+
+        strcpy(nomes[qtd], atual.nome);
+
+        qtd++;
+
+        id_atual = atual.id_pai;
+    }
+
+    saida[0] = '\0';
+
+    for(int i=qtd-1;i>=0;i--)
+    {
+        strcat(saida, "/");
+        strcat(saida, nomes[i]);
+    }
+
+    if(strlen(saida)==0)
+        strcpy(saida,"/");
+}
