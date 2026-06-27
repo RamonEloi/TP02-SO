@@ -1,1 +1,3 @@
-Teste pra ver se o bagui funciona 123ç.
+verbose
+mkdir pasta1
+cd pasta1
