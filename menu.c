@@ -66,27 +66,33 @@ void iniciar_menu_interativo(FILE *stream_entrada, int tamanho_disco, int tamanh
             printf("Modo verboso %s\n", modo_verboso ? "ativado" : "desativado");
         }
         else if(strcmp(comando, "info") == 0){
+            if(modo_verboso) printf("[VERBOSE] Acessando Superbloco para ler os metadados da particao...\n");
             mostrar_info_disco("meu_hd_virtual.bin");
         }
         else if(strncmp(comando, "mkdir ", 6) == 0){
             char *nome = comando + 6;
+            if(modo_verboso) printf("[VERBOSE] Alocando i-node e atualizando ponteiros 'id_primeiroFilho' ou 'id_proximoIrmao'...\n");
             int r = simular_mkdir("meu_hd_virtual.bin", nome, diretorio_atual_id);
             if(r != -1)
                 printf("Diretorio criado!\n");
         }
         else if(strncmp(comando, "touch ", 6) == 0){
             char *nome = comando + 6;
+            if(modo_verboso) printf("[VERBOSE] Varrendo mapa de bits para alocar um i-node vazio para o arquivo '%s'...\n", nome);
             int r = criar_arquivo("meu_hd_virtual.bin", nome, diretorio_atual_id);
             if(r != -1)
                 printf("Arquivo criado!\n");
         }
         else if(strcmp(comando, "ls") == 0){
+            if(modo_verboso) printf("[VERBOSE] Lendo i-node %d e percorrendo a lista encadeada de filhos...\n", diretorio_atual_id);
             listar_diretorio("meu_hd_virtual.bin", diretorio_atual_id);
         }
         else if(strncmp(comando, "cd ", 3) == 0){
+            if(modo_verboso) printf("[VERBOSE] Buscando i-node de destino e alterando o ID do contexto atual...\n");
             mudar_diretorio("meu_hd_virtual.bin", comando + 3, &diretorio_atual_id);
         }
         else if(strcmp(comando, "pwd") == 0){
+            if(modo_verboso) printf("[VERBOSE] Percorrendo ponteiros 'id_pai' iterativamente ate chegar na raiz...\n");
             obter_caminho_atual("meu_hd_virtual.bin", diretorio_atual_id, caminho_atual);
             printf("%s\n", caminho_atual);
         }
@@ -94,6 +100,7 @@ void iniciar_menu_interativo(FILE *stream_entrada, int tamanho_disco, int tamanh
             char real[100];
             char virtual[100];
             if(sscanf(comando + 9, "%s %s", real, virtual) == 2){
+                if(modo_verboso) printf("[VERBOSE] Lendo arquivo do Linux, fatiando em blocos e salvando fisicamente no HD virtual...\n");
                 int r = importar_arquivo_real("meu_hd_virtual.bin", real, virtual, diretorio_atual_id);
                 if (r != -1) {
                     printf("Arquivo importado!\n");
@@ -103,6 +110,7 @@ void iniciar_menu_interativo(FILE *stream_entrada, int tamanho_disco, int tamanh
             }
         }
         else if(strncmp(comando, "cat ", 4) == 0){
+            if(modo_verboso) printf("[VERBOSE] Mapeando i-node, juntando blocos de dados e imprimindo buffer na tela...\n");
             int id = buscar_filho_por_nome("meu_hd_virtual.bin", diretorio_atual_id, comando + 4);
             if(id != -1)
                 exibir_conteudo_arquivo("meu_hd_virtual.bin", id);
@@ -110,12 +118,14 @@ void iniciar_menu_interativo(FILE *stream_entrada, int tamanho_disco, int tamanh
                 printf("Arquivo nao encontrado.\n");
         }
         else if(strncmp(comando, "rm ", 3) == 0){
+            if(modo_verboso) printf("[VERBOSE] Zerando blocos fisicos, limpando mapa de bits e reajustando arvore...\n");
             int r = remover_arquivo("meu_hd_virtual.bin", comando + 3, diretorio_atual_id);
             if(r != -1) {
                 printf("Arquivo removido.\n");
             }
         }
         else if(strncmp(comando, "rmdir ", 6) == 0){
+            if(modo_verboso) printf("[VERBOSE] Verificando integridade (diretorio vazio) e liberando o i-node...\n");
             int r = remover_diretorio("meu_hd_virtual.bin", comando + 6, diretorio_atual_id);
             if(r != -1) {
                 printf("Diretorio removido.\n");
@@ -125,6 +135,7 @@ void iniciar_menu_interativo(FILE *stream_entrada, int tamanho_disco, int tamanh
             char antigo[100];
             char novo[100];
             if(sscanf(comando + 9, "%s %s", antigo, novo) == 2){
+                if(modo_verboso) printf("[VERBOSE] Carregando i-node alvo na RAM, substituindo string e salvando no disco...\n");
                 int r = renomear_item("meu_hd_virtual.bin", antigo, novo, diretorio_atual_id);
                 if(r != -1) {
                     printf("Renomeado!\n");
@@ -137,6 +148,7 @@ void iniciar_menu_interativo(FILE *stream_entrada, int tamanho_disco, int tamanh
             char item[100];
             char destino[100];
             if(sscanf(comando + 3, "%s %s", item, destino) == 2){
+                if(modo_verboso) printf("[VERBOSE] Modificando logica encadeada: desvinculando do pai atual e vinculando ao novo...\n");
                 if(mover_item("meu_hd_virtual.bin", item, destino, diretorio_atual_id) == 0) {
                     printf("Item movido com sucesso!\n");
                 }
