@@ -54,6 +54,11 @@ int encontrar_inode_por_caminho(const char *nome_disco, const char *caminho, int
 }
 int buscar_filho_por_nome(const char *nome_disco, int id_pai, const char *nome)
 {
+    if (strcmp(nome, "..") == 0) {
+        inode pai_atual;
+        ler_inode(nome_disco, id_pai, &pai_atual);
+        return pai_atual.id_pai;
+    }
     inode pai;
     ler_inode(nome_disco, id_pai, &pai);
 
