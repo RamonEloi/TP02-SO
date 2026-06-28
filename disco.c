@@ -201,5 +201,59 @@ void liberar_inode(const char* nome_disco, int id_inode) {
     fseek(f, 0, SEEK_SET);
     fwrite(&sb, sizeof(Disco), 1, f);
 
+    
     fclose(f);
+    
+}
+void mostrar_info_disco(const char* nome_disco){
+
+    FILE *f = fopen(nome_disco, "rb");
+
+    if(f == NULL){
+        printf("Erro ao abrir disco virtual.\n");
+        return;
+    }
+
+
+    Disco disco;
+
+    fread(&disco, sizeof(Disco), 1, f);
+
+
+
+    printf("\n================================\n");
+    printf("       INFORMACOES DO DISCO\n");
+    printf("================================\n\n");
+
+
+    printf("Tamanho da particao: %d bytes\n",
+            disco.tamanho_disco);
+
+
+    printf("Tamanho do bloco: %d bytes\n",
+            disco.tamanho_bloco);
+
+
+    printf("\nQuantidade de blocos: %d\n",
+            disco.qtd_blocos);
+
+
+    printf("Blocos livres: %d\n",
+            disco.blocos_livres);
+
+
+
+    printf("\nQuantidade de i-nodes: %d\n",
+            disco.qtd_inodes);
+
+
+    printf("i-nodes livres: %d\n",
+            disco.inodes_livres);
+
+
+    printf("\n================================\n");
+
+
+    fclose(f);
+
 }

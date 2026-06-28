@@ -17,5 +17,5 @@ int alocar_bloco(const char* nome_disco);
 void liberar_bloco(const char* nome_disco, int bloco_id);
 int alocar_inode(const char* nome_disco);
 void liberar_inode(const char* nome_disco, int id_inode);
-
+void mostrar_info_disco(const char* nome_disco);
 #endif
