@@ -153,7 +153,8 @@ void listar_diretorio(const char *nome_disco, int id_diretorio)
         printf("Erro: O i-node %d nao e um diretorio.\n", id_diretorio);
         return;
     }
-
+    dir_atual.acessado = time(NULL);
+    guardar_inode(nome_disco, id_diretorio, &dir_atual);
     int id_filho = dir_atual.id_primeiroFilho;
 
     if (id_filho == -1)

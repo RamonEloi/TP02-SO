@@ -1,3 +1,9 @@
 verbose
-mkdir pasta1
-cd pasta1
+info
+mkdir diretorio_batch
+cd diretorio_batch
+touch arquivo_batch.txt
+ls
+cd ..
+info
+sair

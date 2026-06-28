@@ -172,6 +172,8 @@ void exibir_conteudo_arquivo(const char *nome_disco, int id_inode){
         printf("Erro: '%s' e um diretorio, nao um arquivo.\n", in.nome);
         return;
     }
+    in.acessado = time(NULL);
+    guardar_inode(nome_disco, id_inode, &in);
     FILE *f = fopen(nome_disco, "rb");
     Disco sb;
     fread(&sb, sizeof(Disco), 1, f);
